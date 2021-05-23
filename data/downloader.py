@@ -13,9 +13,14 @@ def downloadFromUrl(filename, url):
     with open(filepath, 'wb') as f:
         f.write(download.content)
 
+# reads the url and determines filetype
+# renames file to emote name
 def processDiscordAttachment(attachment, emote_name):
     url = attachment.url
-    downloadFromUrl()
+    filetype = url.split('.')[-1]
+    # verify filetype is acceptable
+    if filetype in ["png", "jpg"]:
+        downloadFromUrl(f'{emote_name}.{filetype}', url)
 
 if __name__ == "__main__":
     print(str(emotespath))

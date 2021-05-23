@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # discord bot token
-# bot_token.py
+bot_token.py

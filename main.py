@@ -38,8 +38,8 @@ async def addEmote(ctx, *args):
     
     # verify attachment is present
     if 0 < len(ctx.message.attachments) == len(args):
-        # for index in range (len(args)):
-            # downloader.processDiscordAttachment(attachment, emote_name)
+        for index in range (len(args)):
+            downloader.processDiscordAttachment(attachment, emote_name)
         await ctx.send(ctx.message.attachments[0])
     else:
         await ctx.send("Missing Pictures to Use As Emotes")
