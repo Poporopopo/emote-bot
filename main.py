@@ -1,5 +1,6 @@
 # self info 
-from data import bot_token
+from data import downloader
+from data.bot_token import bot_token 
 # libraries
 import discord 
 from discord.ext import commands
@@ -36,10 +37,14 @@ async def addEmote(ctx, *args):
     # verify name isn't taken
     
     # verify attachment is present
-    if 0 < len(ctx.message.attachments) == len(args) :
+    if 0 < len(ctx.message.attachments) == len(args):
+        # for index in range (len(args)):
+            # downloader.processDiscordAttachment(attachment, emote_name)
         await ctx.send(ctx.message.attachments[0])
+    else:
+        await ctx.send("Missing Pictures to Use As Emotes")
     print(ctx.message.attachments)
     
 
 if __name__ == "__main__":
-    bot.run(bot_token.bot_token)
+    bot.run(bot_token)

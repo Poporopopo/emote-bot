@@ -4,6 +4,7 @@ import pathlib, requests
 parentpath = pathlib.Path(__file__).parent
 emotespath = parentpath / "emotes"
 
+# downloads and writes file
 def downloadFromUrl(filename, url):
     filepath = str(emotespath / filename)
     print(filepath)
@@ -11,6 +12,10 @@ def downloadFromUrl(filename, url):
     
     with open(filepath, 'wb') as f:
         f.write(download.content)
+
+def processDiscordAttachment(attachment, emote_name):
+    url = attachment.url
+    downloadFromUrl()
 
 if __name__ == "__main__":
     print(str(emotespath))
