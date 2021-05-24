@@ -2,7 +2,6 @@
 from data import emote_manager
 from data.bot_token import bot_token 
 # libraries
-import discord 
 from discord.ext import commands
 
 prefix = "popbot "
@@ -39,8 +38,13 @@ async def addEmote(ctx, *args):
     # verify attachment is present
     if 0 < len(ctx.message.attachments) == len(args):
         for index in range (len(args)):
-            emote_manager.processDiscordAttachment(ctx.message.attachments[index], args[index])
-            await ctx.send(ctx.message.attachments[index])
+            addcode = emote_manager.processDiscordAttachment(ctx.message.attachments[index], args[index])
+            if addcode == 1:
+                await ctx.send(f'{args[index]} is already taken as an emote name')
+            elif addcode == 2:
+                await ctx.send('That is not a supported filetype')
+            else:
+                await ctx.send('Emote has been successfully stored')
     else:
         await ctx.send("Missing Pictures to Use As Emotes")
     print(ctx.message.attachments)
