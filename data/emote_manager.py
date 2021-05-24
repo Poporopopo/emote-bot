@@ -24,7 +24,7 @@ def processDiscordAttachment(attachment, emote_name):
     else:
         return 2
     # add to database and emote folder
-    addToDatabase(emote_name,filetype)
+    storeEmote(emote_name,filetype)
     return 0
         
 # downloads and writes file
@@ -48,14 +48,47 @@ def isNameTaken(emote_name):
 
 # moves emote from downloads to emotes folder
 # adds entry in database with name and filetype
-def addToDatabase(emote_name, filetype):
-    if filetype in ["png", "jpg"]:
-        "lol"
-    # move to emote folder
+def storeEmote(emote_name, filetype):
     currentlocation = downloadspath / f'{emote_name}.{filetype}'
+    if filetype in ["png", "jpg"]:
+        hashstring = averagehashImage(currentlocation)
+        if checkForSimilar(hashstring):
+            return 3
+        addToDatabase(emote_name, filetype, hashstring)
+    # move to emote folder
     targetlocation = emotespath / f'{emote_name}.{filetype}'
     currentlocation.rename(targetlocation)
     return
+
+def addToDatabase(emote_name, filetype, hashstring):
+    database = sqlite3.connect(databasepath)
+    cursor = database.cursor()
+    cursor.execute(
+        "INSERT INTO emotes VALUES (?, ?, ?)", (emote_name, filetype, hashstring, )
+    )
+    database.commit()
+    database.close()
+
+def averagehashImage(filepath):
+    hash = imagehash.average_hash(Image.open(str(filepath)))
+    return str(hash)
+
+def checkForSimilar(hashstring):
+    database = sqlite3.connect(databasepath)
+    cursor = database.cursor()
+    cursor.execute(
+        "SELECT hashstring FROM emotes"
+    )
+    rows = cursor.fetchall()
+    database.commit()
+    database.close()
+
+    for row in rows:
+        print(row[0], type(row[0]))
+        if compareFromImageHashString(hashstring, row[0]) < 0:
+            return True
+    
+    return False
 
 def compareFromImageHashString(hashString1, hashString2):
     binarray1 = createNumpyArrayFromString(hashString1)
@@ -64,6 +97,7 @@ def compareFromImageHashString(hashString1, hashString2):
 
 # creates numpy array for hash comparision from hash string
 def createNumpyArrayFromString(hashString, expectedlength=64):
+    print(hashString)
     binstring = f'{int(hashString,16):b}'
     # accounting for binary conversion losing zeros
     if len(binstring) < expectedlength:
@@ -95,14 +129,23 @@ def main():
     return
 
 if __name__ == "__main__":
+    print("Setting Up Directories and Database")
     main()
+    
+    print("Downloading Example Images")
     downloadFromUrl("belo.png", "https://azurlane.koumakan.jp/w/images/thumb/c/c2/Sovetskaya_Belorussiya.png/900px-Sovetskaya_Belorussiya.png")
     downloadFromUrl("2blewd.png", "https://cdn.discordapp.com/attachments/725343534437105719/845871904694730752/2Blewd.png")
-    print(isNameTaken("test"))
-    print(isNameTaken("no test"))
     
+    print("Testing Name Verifier")
+    print(isNameTaken("belo"))
+    print(isNameTaken("2blewd"))
+    
+    print("Testing Hash Comparision")
     hash1 = imagehash.average_hash(Image.open(str(downloadspath / "2blewd.png")))
     print(hash1)
-    hash2 = imagehash.average_hash(Image.open(str(emotespath / "belo.png")))
+    hash2 = imagehash.average_hash(Image.open(str(downloadspath / "belo.png")))
     print(hash2)
     print(compareFromImageHashString(str(hash1),str(hash2)))
+
+    print("Testing Emote Relocation and Database Insertion")
+    storeEmote("belo", "png")
