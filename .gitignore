@@ -129,8 +129,8 @@ dmypy.json
 .pyre/
 
 # discord bot token
-bot_token.py
+data/bot_token.py
 
 # emote folders
-emotes/*
-emote downloads/*
+data/emotes/*
+data/emote downloads/*
