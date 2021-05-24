@@ -1,8 +1,10 @@
+import pathlib, requests, sqlite3
 
-
-import pathlib, requests
 parentpath = pathlib.Path(__file__).parent
-
+emotespath = parentpath / "emotes"
+downloadspath = parentpath / "emote downloads"
+databasepath = parentpath / "emotes.db"
+    
 # downloads and writes file
 def downloadFromUrl(filename, url):
     filepath = str(parentpath / "emote downloads" / filename)
@@ -28,6 +30,28 @@ def processDiscordAttachment(attachment, emote_name):
 def isNameTaken(emote_name):
     return
 
+def main():
+    # create emote directories if does not exist
+    emotespath.mkdir(exist_ok=True)
+    downloadspath.mkdir(exist_ok=True)
+    # create SQL database if does not exist
+    try:
+        open(databasepath, "x").close()
+    except FileExistsError as e:
+        print(e)
+    # create table in database
+    database = sqlite3.connect(databasepath)
+    cursor = database.cursor()
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS emotes("
+            "name text UNIQUE"
+            ")"
+    )
+    database.commit()
+    database.close()
+    return
+
 if __name__ == "__main__":
+    main()
     downloadFromUrl("belo.png", "https://azurlane.koumakan.jp/w/images/thumb/c/c2/Sovetskaya_Belorussiya.png/900px-Sovetskaya_Belorussiya.png")
     downloadFromUrl("2blewd.png", "https://cdn.discordapp.com/attachments/725343534437105719/845871904694730752/2Blewd.png")
