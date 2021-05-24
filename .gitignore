@@ -130,3 +130,7 @@ dmypy.json
 
 # discord bot token
 bot_token.py
+
+# emote folders
+emotes/..
+emote downloads/..
