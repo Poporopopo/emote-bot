@@ -13,6 +13,7 @@ databasepath = parentpath / "emotes.db"
 # 2: file is not supported
 def processDiscordAttachment(attachment, emote_name):
     # verify name is not taken
+    emote_name = emote_name.lower()
     if isNameTaken(emote_name):
         return 1
     url = attachment.url
@@ -24,8 +25,10 @@ def processDiscordAttachment(attachment, emote_name):
     else:
         return 2
     # add to database and emote folder
-    storeEmote(emote_name,filetype)
-    return 0
+    if not storeEmote(emote_name,filetype):
+        return 3
+    else:
+        return 0
         
 # downloads and writes file
 def downloadFromUrl(filename, url):
@@ -53,12 +56,12 @@ def storeEmote(emote_name, filetype):
     if filetype in ["png", "jpg"]:
         hashstring = averagehashImage(currentlocation)
         if checkForSimilar(hashstring):
-            return 3
+            return False
         addToDatabase(emote_name, filetype, hashstring)
     # move to emote folder
     targetlocation = emotespath / f'{emote_name}.{filetype}'
     currentlocation.rename(targetlocation)
-    return
+    return True
 
 def addToDatabase(emote_name, filetype, hashstring):
     database = sqlite3.connect(databasepath)
@@ -84,8 +87,7 @@ def checkForSimilar(hashstring):
     database.close()
 
     for row in rows:
-        print(row[0], type(row[0]))
-        if compareFromImageHashString(hashstring, row[0]) < 0:
+        if compareFromImageHashString(hashstring, row[0]) < 10:
             return True
     
     return False
@@ -97,7 +99,6 @@ def compareFromImageHashString(hashString1, hashString2):
 
 # creates numpy array for hash comparision from hash string
 def createNumpyArrayFromString(hashString, expectedlength=64):
-    print(hashString)
     binstring = f'{int(hashString,16):b}'
     # accounting for binary conversion losing zeros
     if len(binstring) < expectedlength:

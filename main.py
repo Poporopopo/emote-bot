@@ -43,12 +43,15 @@ async def addEmote(ctx, *args):
                 await ctx.send(f'{args[index]} is already taken as an emote name')
             elif addcode == 2:
                 await ctx.send('That is not a supported filetype')
+            elif addcode == 3:
+                await ctx.send('A similar emote has already been added.')
             else:
                 await ctx.send('Emote has been successfully stored')
     else:
-        await ctx.send("Missing Pictures to Use As Emotes")
+        await ctx.send("Missing pictures to use as emotes")
     print(ctx.message.attachments)
     
 
 if __name__ == "__main__":
+    emote_manager.main()
     bot.run(bot_token)
