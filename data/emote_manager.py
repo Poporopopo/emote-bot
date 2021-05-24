@@ -28,7 +28,15 @@ def processDiscordAttachment(attachment, emote_name):
         
 
 def isNameTaken(emote_name):
-    return
+    database = sqlite3.connect(databasepath)
+    cursor = database.cursor()
+    cursor.execute(
+        "SELECT name FROM emotes WHERE name == (?)", (emote_name, )
+    )
+    rows = cursor.fetchall()
+    database.commit()
+    database.close()
+    return len(rows) > 0
 
 def main():
     # create emote directories if does not exist
@@ -55,3 +63,5 @@ if __name__ == "__main__":
     main()
     downloadFromUrl("belo.png", "https://azurlane.koumakan.jp/w/images/thumb/c/c2/Sovetskaya_Belorussiya.png/900px-Sovetskaya_Belorussiya.png")
     downloadFromUrl("2blewd.png", "https://cdn.discordapp.com/attachments/725343534437105719/845871904694730752/2Blewd.png")
+    print(isNameTaken("test"))
+    print(isNameTaken("no test"))
