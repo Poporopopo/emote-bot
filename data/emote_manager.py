@@ -1,4 +1,6 @@
-import pathlib, requests, sqlite3
+import pathlib, requests, sqlite3, numpy
+from PIL import Image
+import imagehash
 
 parentpath = pathlib.Path(__file__).parent
 emotespath = parentpath / "emotes"
@@ -17,18 +19,20 @@ def processDiscordAttachment(attachment, emote_name):
     filetype = url.split('.')[-1]
     # verify filetype is acceptable
     if filetype in ["png", "jpg"]:
+        # download to local downloads folder
         downloadFromUrl(f'{emote_name}.{filetype}', url)
     else:
         return 2
+    # add to database and emote folder
+    addToDatabase(emote_name,filetype)
     return 0
         
 # downloads and writes file
 def downloadFromUrl(filename, url):
-    filepath = str(parentpath / "emote downloads" / filename)
-    print(filepath)
+    filepath = parentpath / "emote downloads" / filename
     download = requests.get(url)
     
-    with open(filepath, 'wb') as f:
+    with filepath.open('wb') as f:
         f.write(download.content)
 
 def isNameTaken(emote_name):
@@ -42,13 +46,38 @@ def isNameTaken(emote_name):
     database.close()
     return len(rows) > 0
 
+# moves emote from downloads to emotes folder
+# adds entry in database with name and filetype
+def addToDatabase(emote_name, filetype):
+    if filetype in ["png", "jpg"]:
+        "lol"
+    # move to emote folder
+    currentlocation = downloadspath / f'{emote_name}.{filetype}'
+    targetlocation = emotespath / f'{emote_name}.{filetype}'
+    currentlocation.rename(targetlocation)
+    return
+
+def compareFromImageHashString(hashString1, hashString2):
+    binarray1 = createNumpyArrayFromString(hashString1)
+    binarray2 = createNumpyArrayFromString(hashString2)
+    return numpy.count_nonzero(binarray1 != binarray2)
+
+# creates numpy array for hash comparision from hash string
+def createNumpyArrayFromString(hashString, expectedlength=64):
+    binstring = f'{int(hashString,16):b}'
+    # accounting for binary conversion losing zeros
+    if len(binstring) < expectedlength:
+        zerostring = "0" * abs(expectedlength - len(binstring))
+        binstring = zerostring + binstring
+    return numpy.array([int(char) for char in binstring])
+
 def main():
     # create emote directories if does not exist
     emotespath.mkdir(exist_ok=True)
     downloadspath.mkdir(exist_ok=True)
     # create SQL database if does not exist
     try:
-        open(databasepath, "x").close()
+        databasepath.open("x").close()
     except FileExistsError as e:
         print(e)
     # create table in database
@@ -56,7 +85,9 @@ def main():
     cursor = database.cursor()
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS emotes("
-            "name text UNIQUE"
+            "name text UNIQUE,"
+            "filetype text,"
+            "hashstring text"
             ")"
     )
     database.commit()
@@ -65,7 +96,13 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # downloadFromUrl("belo.png", "https://azurlane.koumakan.jp/w/images/thumb/c/c2/Sovetskaya_Belorussiya.png/900px-Sovetskaya_Belorussiya.png")
-    # downloadFromUrl("2blewd.png", "https://cdn.discordapp.com/attachments/725343534437105719/845871904694730752/2Blewd.png")
+    downloadFromUrl("belo.png", "https://azurlane.koumakan.jp/w/images/thumb/c/c2/Sovetskaya_Belorussiya.png/900px-Sovetskaya_Belorussiya.png")
+    downloadFromUrl("2blewd.png", "https://cdn.discordapp.com/attachments/725343534437105719/845871904694730752/2Blewd.png")
     print(isNameTaken("test"))
     print(isNameTaken("no test"))
+    
+    hash1 = imagehash.average_hash(Image.open(str(downloadspath / "2blewd.png")))
+    print(hash1)
+    hash2 = imagehash.average_hash(Image.open(str(emotespath / "belo.png")))
+    print(hash2)
+    print(compareFromImageHashString(str(hash1),str(hash2)))
